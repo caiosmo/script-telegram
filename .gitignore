@@ -1,0 +1,30 @@
+# Credenciais e configurações sensíveis
+.env
+
+# Dados de estado do bot (não versionar)
+vistos.json
+vistos_backup.json
+vistos_old.json
+
+# Logs e saída
+bot_run_output.txt
+
+# Ambiente virtual Python
+venv/
+.venv/
+env/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Playwright
+playwright-report/
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+desktop.ini
