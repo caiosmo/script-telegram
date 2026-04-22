@@ -6,6 +6,31 @@ import re
 import sys
 import threading
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
+TZ_SP = ZoneInfo("America/Sao_Paulo")
+
+def _calcular_offset_relogio():
+    """Compara o relógio do sistema com o horário real de um servidor HTTP."""
+    try:
+        from email.utils import parsedate_to_datetime
+        resp = requests.head("https://www.google.com", timeout=5)
+        server_time_str = resp.headers.get("Date")
+        if server_time_str:
+            server_time = parsedate_to_datetime(server_time_str).astimezone(TZ_SP)
+            sys_time = datetime.now(TZ_SP)
+            offset = server_time - sys_time
+            return offset
+    except Exception as e:
+        print(f"[AVISO] Não foi possível sincronizar horário: {e}")
+    return timedelta(0)
+
+_RELOGIO_OFFSET = _calcular_offset_relogio()
+
+def agora():
+    """Retorna a hora atual corrigida no fuso de São Paulo."""
+    return datetime.now(TZ_SP) + _RELOGIO_OFFSET
+
 import tkinter as tk
 from tkinter import scrolledtext
 from playwright.sync_api import sync_playwright
@@ -92,7 +117,7 @@ def rodar_bot():
     novos = []
     ja_vistos_bons = []
     
-    inicio = datetime.now()
+    inicio = agora()
     print(f"\n🕐 Iniciando verificação em {inicio.strftime('%d/%m/%Y %H:%M:%S')}")
     # Debug: mostrar quantos anúncios já foram marcados como vistos
     print(f"📊 Total de anúncios já marcados como vistos: {len(vistos)}\n")
@@ -201,7 +226,7 @@ stop_event = threading.Event()
 def loop_bot(intervalo_minutos):
     while not stop_event.is_set():
         rodar_bot()
-        proxima = datetime.now() + timedelta(minutes=intervalo_minutos)
+        proxima = agora() + timedelta(minutes=intervalo_minutos)
         print(f"\n⏱️ ({proxima.strftime('%d/%m/%Y %H:%M:%S')}) Próxima verificação em {intervalo_minutos} minuto(s)...")
         stop_event.wait(timeout=intervalo_minutos * 60)
     print("\n🛑 Bot parado.")
